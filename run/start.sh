@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/compose.sh"
 
-env_file=$(list_envs)
+list_envs
+env_file="$SELECTED_ENV"
 echo "使用配置：$(basename "$env_file")"
 
 load_env "$env_file"

@@ -38,7 +38,7 @@ list_envs() {
         exit 1
     fi
 
-    echo "${env_files[$((choice - 1))]}"
+    SELECTED_ENV="${env_files[$((choice - 1))]}"
 }
 
 load_env() {
