@@ -8,9 +8,9 @@ services:
       - TZ=${TZ:-Asia/Shanghai}
       - PASSWORD=${PASSWORD:?请在 env 文件中设置 PASSWORD}
     volumes:
-      - ${VOLUME_NAME:?请在 env 文件中设置 VOLUME_NAME}:/home/coder
+      - code-server-data:/home/coder
       {{WORKSPACE_VOLUMES}}
     restart: unless-stopped
 
 volumes:
-  ${VOLUME_NAME:?请在 env 文件中设置 VOLUME_NAME}:
+  code-server-data:
