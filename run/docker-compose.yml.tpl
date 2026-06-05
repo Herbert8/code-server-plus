@@ -11,3 +11,6 @@ services:
       - ${VOLUME_NAME:?请在 env 文件中设置 VOLUME_NAME}:/home/coder
       {{WORKSPACE_VOLUMES}}
     restart: unless-stopped
+
+volumes:
+  ${VOLUME_NAME:?请在 env 文件中设置 VOLUME_NAME}:
