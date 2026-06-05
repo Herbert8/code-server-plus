@@ -4,15 +4,36 @@
 
 ## 使用方法
 
+### 构建镜像
+
 ```bash
 # 生成 Dockerfile 和 README
-python3 build.py generate
+python3 build/build.py generate
 
 # 构建镜像
-python3 build.py build
+python3 build/build.py build
 
 # 构建时指定镜像名和标签
-python3 build.py build --name my-image --tag v1.0
+python3 build/build.py build --name my-image --tag v1.0
+```
+
+### 启动容器
+
+```bash
+# 启动（交互选择环境配置）
+./run/start.sh
+
+# 停止
+./run/stop.sh
+
+# 重启
+./run/restart.sh
+
+# 查看日志
+./run/logs.sh
+
+# 查看状态
+./run/status.sh
 ```
 
 ## 工具清单
