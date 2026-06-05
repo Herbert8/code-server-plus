@@ -26,4 +26,16 @@ ALIASES
 # 安装 code-server 扩展
 USER coder
 {{EXTENSION_INSTALLS}}
+# 清理构建时生成的缓存和配置
+RUN rm -rf ~/.config/code-server \
+    && rm -rf ~/.local/share/code-server/CachedExtensionVSIXs \
+              ~/.local/share/code-server/CachedProfilesData \
+              ~/.local/share/code-server/logs \
+              ~/.local/share/code-server/coder-logs \
+              ~/.local/share/code-server/Machine \
+              ~/.local/share/code-server/User \
+              ~/.local/share/code-server/machineid
+
+USER root
+
 EXPOSE 8080

@@ -10,10 +10,11 @@ import urllib.error
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = SCRIPT_DIR.parent
 TOOLS_TOML = SCRIPT_DIR / "tools.toml"
 DOCKERFILE_TPL = SCRIPT_DIR / "Dockerfile.tpl"
 DOCKERFILE_OUT = SCRIPT_DIR / "Dockerfile"
-README_FILE = SCRIPT_DIR / "README.md"
+README_FILE = PROJECT_DIR / "README.md"
 
 README_TABLE_START = "<!-- TOOLS_TABLE_START -->"
 README_TABLE_END = "<!-- TOOLS_TABLE -->"
