@@ -1,0 +1,265 @@
+[base]
+image = "codercom/code-server"
+tag = "4.122.0-debian"
+
+# 包管理器安装的工具（apt）
+[[package]]
+name = "ripgrep"
+desc = "极速文本搜索工具"
+
+[[package]]
+name = "fd-find"
+desc = "find 的快速替代品（二进制名为 fdfind，已创建 fd 符号链接）"
+
+[[package]]
+name = "bat"
+desc = "cat 的增强替代品，支持语法高亮（二进制名为 batcat，已创建 bat 符号链接）"
+
+[[package]]
+name = "fzf"
+desc = "命令行模糊查找器"
+
+[[package]]
+name = "tmux"
+desc = "终端复用器"
+
+[[package]]
+name = "htop"
+desc = "交互式进程查看器"
+
+[[package]]
+name = "ncdu"
+desc = "交互式磁盘用量分析器"
+
+[[package]]
+name = "p7zip-full"
+desc = "高压缩比压缩/解压工具"
+
+[[package]]
+name = "unzip"
+desc = "ZIP 解压工具"
+
+[[package]]
+name = "redis-tools"
+desc = "Redis 客户端工具"
+
+[[package]]
+name = "default-mysql-client"
+desc = "MySQL 客户端工具"
+
+[[package]]
+name = "postgresql-client"
+desc = "PostgreSQL 客户端工具"
+
+[[package]]
+name = "nmap"
+desc = "网络扫描和安全审计工具"
+
+[[package]]
+name = "netcat-openbsd"
+desc = "网络调试工具"
+
+[[package]]
+name = "dropbear-bin"
+desc = "轻量级 SSH 服务器/客户端"
+
+[[package]]
+name = "bzip2"
+desc = "bzip2 压缩/解压工具"
+
+[[package]]
+name = "zstd"
+desc = "Zstandard 高性能压缩/解压工具"
+
+[[package]]
+name = "jq"
+desc = "命令行 JSON 处理工具"
+
+[[package]]
+name = "lnav"
+desc = "终端日志查看和分析工具"
+
+# 通过 GitHub Releases 下载的二进制
+[[binary]]
+name = "eza"
+desc = "ls 的现代替代品，支持颜色和图标"
+repo = "eza-community/eza"
+pattern = "x86_64-unknown-linux-gnu"
+extract = "eza"
+
+[[binary]]
+name = "lazygit"
+desc = "终端 Git UI 工具"
+repo = "jesseduffield/lazygit"
+pattern = "linux_x86_64"
+extract = "lazygit"
+
+[[binary]]
+name = "croc"
+desc = "安全快速的文件传输工具"
+repo = "schollz/croc"
+pattern = "Linux-64bit"
+extract = "croc"
+
+[[binary]]
+name = "duf"
+desc = "磁盘使用情况查看工具"
+repo = "muesli/duf"
+pattern = "linux_x86_64"
+extract = "duf"
+
+[[binary]]
+name = "hexyl"
+desc = "终端十六进制查看器"
+repo = "sharkdp/hexyl"
+pattern = "x86_64-unknown-linux-musl"
+extract = "hexyl"
+
+[[binary]]
+name = "yq"
+desc = "命令行 YAML/JSON/XML 处理器"
+repo = "mikefarah/yq"
+pattern = "linux_amd64"
+
+[[binary]]
+name = "xh"
+desc = "友好且快速的 HTTP 客户端"
+repo = "ducaale/xh"
+pattern = "x86_64-unknown-linux-musl"
+extract = "xh"
+
+[[binary]]
+name = "zoxide"
+desc = "智能 cd 命令替代品"
+repo = "ajeetdsouza/zoxide"
+pattern = "x86_64-unknown-linux-musl"
+extract = "zoxide"
+
+[[binary]]
+name = "yazi"
+desc = "终端文件管理器"
+repo = "sxyazi/yazi"
+pattern = "x86_64-unknown-linux-musl.zip"
+extract = "yazi"
+
+[[binary]]
+name = "aichat"
+desc = "终端 AI 聊天客户端，支持多种 LLM"
+repo = "sigoden/aichat"
+pattern = "x86_64-unknown-linux-musl"
+extract = "aichat"
+
+[[binary]]
+name = "opencode"
+desc = "终端 AI 编码助手，支持多种 LLM"
+repo = "anomalyco/opencode"
+pattern = "opencode-linux-x64.tar.gz"
+extract = "opencode"
+
+[[binary]]
+name = "usql"
+desc = "通用数据库客户端，内置多种数据库驱动"
+repo = "xo/usql"
+pattern = "linux-amd64"
+extract = "usql"
+
+[[binary]]
+name = "bun"
+desc = "高性能 JavaScript 运行时和包管理器"
+repo = "oven-sh/bun"
+pattern = "bun-linux-x64.zip"
+extract = "bun"
+
+[[binary]]
+name = "uv"
+desc = "高性能 Python 包管理器，可自动管理 Python 版本"
+repo = "astral-sh/uv"
+pattern = "uv-x86_64-unknown-linux-musl.tar.gz"
+extract = "uv"
+
+[[binary]]
+name = "ttyd"
+desc = "在浏览器中共享终端的工具"
+repo = "tsl0922/ttyd"
+pattern = "ttyd.x86_64"
+extract = "ttyd"
+
+[[binary]]
+name = "git-flow"
+desc = "git-flow AVH 的 Rust 重写版，高性能 Git 分支管理工作流"
+repo = "gittower/git-flow-next"
+pattern = "linux-amd64.tar.gz"
+extract = "*linux-amd64"
+
+[[binary]]
+name = "delta"
+desc = "语法高亮的 git diff 查看器"
+repo = "dandavison/delta"
+pattern = "x86_64-unknown-linux-musl.tar.gz"
+extract = "delta"
+
+[[binary]]
+name = "fx"
+desc = "终端 JSON 交互式查看器"
+repo = "antonmedv/fx"
+pattern = "fx_linux_amd64"
+
+[[binary]]
+name = "glow"
+desc = "终端 Markdown 渲染器"
+repo = "charmbracelet/glow"
+pattern = "Linux_x86_64.tar.gz"
+extract = "glow"
+
+[[binary]]
+name = "zellij"
+desc = "现代终端复用器"
+repo = "zellij-org/zellij"
+pattern = "zellij-x86_64-unknown-linux-musl.tar.gz"
+extract = "zellij"
+
+[[binary]]
+name = "starship"
+desc = "跨 shell 的提示符美化工具"
+repo = "starship/starship"
+pattern = "starship-x86_64-unknown-linux-musl.tar.gz"
+extract = "starship"
+
+[[binary]]
+name = "dust"
+desc = "du 的现代替代品，可视化磁盘使用"
+repo = "bootandy/dust"
+pattern = "unknown-linux-musl.tar.gz"
+extract = "dust"
+
+[[binary]]
+name = "procs"
+desc = "ps 的现代替代品"
+repo = "dalance/procs"
+pattern = "x86_64-linux.zip"
+extract = "procs"
+
+[[binary]]
+name = "btop"
+desc = "htop 的现代替代品，系统资源监控"
+repo = "aristocratos/btop"
+pattern = "btop-x86_64-unknown-linux-musl.tar.gz"
+extract = "btop"
+
+[[binary]]
+name = "tailspin"
+desc = "带语法高亮的日志查看器"
+repo = "bensadeh/tailspin"
+pattern = "tailspin-x86_64-unknown-linux-musl.tar.gz"
+extract = "tspin"
+
+[[binary]]
+name = "websocat"
+desc = "WebSocket 命令行调试工具"
+repo = "vi/websocat"
+pattern = "websocat.x86_64-unknown-linux-musl"
+
+# code-server 扩展
+[[extension]]
+name = "ahmadawais.shades-of-purple"
+desc = "Shades of Purple 主题"
