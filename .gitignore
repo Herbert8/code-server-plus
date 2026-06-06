@@ -1,4 +1,8 @@
 build/Dockerfile
 data/
+run/envs/*
+!run/envs/default.env
+run/storage/*
+!run/storage/config/
 run/storage/config/*
 !run/storage/config/.gitkeep
