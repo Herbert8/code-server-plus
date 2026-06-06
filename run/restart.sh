@@ -6,4 +6,4 @@ source "$SCRIPT_DIR/common.sh"
 
 container=$(select_container "$@")
 docker restart "$container"
-echo "已重启容器：${container}"
+echo "Container restarted: ${container}"

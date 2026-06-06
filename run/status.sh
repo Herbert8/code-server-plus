@@ -6,9 +6,9 @@ source "$SCRIPT_DIR/common.sh"
 
 containers=$(docker ps -a --filter "name=csp-" --format '{{.Names}}')
 if [ -z "$containers" ]; then
-    echo "未找到任何 csp-* 容器"
+    echo "No csp-* containers found"
     exit 0
 fi
 
-echo "运行中的容器："
+echo "Containers:"
 docker ps -f name="csp-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

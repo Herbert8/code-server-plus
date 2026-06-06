@@ -6,4 +6,4 @@ source "$SCRIPT_DIR/common.sh"
 
 container=$(select_container "$@")
 docker stop "$container" && docker rm "$container"
-echo "已停止并删除容器：${container}"
+echo "Container stopped and removed: ${container}"

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# common.sh - 共享代码，被其他脚本 source
 
 RUN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENVS_DIR="$RUN_DIR/envs"
@@ -8,20 +7,20 @@ STORAGE_DIR="$RUN_DIR/storage"
 select_env() {
     local env_files=("$ENVS_DIR"/*.env)
     if [ ${#env_files[@]} -eq 0 ] || [ ! -f "${env_files[0]}" ]; then
-        echo "错误：未找到 env 文件（$ENVS_DIR/*.env）" >&2
+        echo "Error: no env files found ($ENVS_DIR/*.env)" >&2
         exit 1
     fi
 
-    echo "请选择环境配置："
+    echo "Select environment:"
     for i in "${!env_files[@]}"; do
         echo "  $((i+1))) $(basename "${env_files[$i]}" .env)"
     done
 
-    read -rp "请输入编号 [1]: " choice
+    read -rp "Enter number [1]: " choice
     choice=${choice:-1}
 
     if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#env_files[@]} ]; then
-        echo "错误：无效的选择" >&2
+        echo "Error: invalid selection" >&2
         exit 1
     fi
 
@@ -31,7 +30,7 @@ select_env() {
 load_env() {
     local env_file="$1"
     if [ ! -f "$env_file" ]; then
-        echo "错误：env 文件不存在：$env_file" >&2
+        echo "Error: env file not found: $env_file" >&2
         exit 1
     fi
     set -a
@@ -41,11 +40,11 @@ load_env() {
 
 check_required() {
     if [ -z "${PASSWORD:-}" ]; then
-        echo "错误：PASSWORD 未设置，请在 env 文件中配置" >&2
+        echo "Error: PASSWORD not set, please configure in env file" >&2
         exit 1
     fi
     if [ -z "${IMAGE:-}" ]; then
-        echo "错误：IMAGE 未设置，请在 env 文件中配置" >&2
+        echo "Error: IMAGE not set, please configure in env file" >&2
         exit 1
     fi
 }
@@ -63,7 +62,7 @@ select_container() {
     while [ $# -gt 0 ]; do
         case "$1" in
             -p) OPT_PROJECT="$2"; shift 2 ;;
-            -*) echo "未知选项：$1" >&2; exit 1 ;;
+            -*) echo "Unknown option: $1" >&2; exit 1 ;;
             *) shift ;;
         esac
     done
@@ -76,7 +75,7 @@ select_container() {
     local containers
     containers=$(docker ps -a --filter "name=csp-" --format '{{.Names}}')
     if [ -z "$containers" ]; then
-        echo "错误：未找到任何 csp-* 容器" >&2
+        echo "Error: no csp-* containers found" >&2
         exit 1
     fi
 
@@ -86,7 +85,7 @@ select_container() {
         return
     fi
 
-    echo "请选择容器："
+    echo "Select container:"
     local i=1
     for c in "${arr[@]}"; do
         local status
@@ -95,11 +94,11 @@ select_container() {
         ((i++))
     done
 
-    read -rp "请输入编号 [1]: " choice
+    read -rp "Enter number [1]: " choice
     choice=${choice:-1}
 
     if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#arr[@]} ]; then
-        echo "错误：无效的选择" >&2
+        echo "Error: invalid selection" >&2
         exit 1
     fi
 
