@@ -32,7 +32,7 @@ check_required
 mkdir -p "$STORAGE_DIR/config"
 
 mount_list=("${STORAGE_DIR}/config -> /home/coder/.config")
-volume_args="-v ${STORAGE_DIR/config}:/home/coder/.config"
+volume_args="-v ${STORAGE_DIR}/config:/home/coder/.config"
 for dir in "${workspace_dirs[@]+${workspace_dirs[@]}}"; do
     if [ ! -d "$dir" ]; then
         echo "Warning: directory not found, skipping: $dir" >&2
