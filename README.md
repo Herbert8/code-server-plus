@@ -55,13 +55,18 @@ python3 build/build.py build --name my-image --tag v1.0
 | redis-tools | Redis 客户端工具 |
 | default-mysql-client | MySQL 客户端工具 |
 | postgresql-client | PostgreSQL 客户端工具 |
-| nmap | 网络扫描和安全审计工具 |
+| ncat | NMAP netcat 实现，支持 SSL/代理等高级功能 |
 | netcat-openbsd | 网络调试工具 |
 | dropbear-bin | 轻量级 SSH 服务器/客户端 |
 | bzip2 | bzip2 压缩/解压工具 |
 | zstd | Zstandard 高性能压缩/解压工具 |
 | jq | 命令行 JSON 处理工具 |
 | lnav | 终端日志查看和分析工具 |
+| iputils-ping | ping 网络诊断工具 |
+| iproute2 | ip、ss 等网络配置工具 |
+| dnsutils | dig、nslookup 等 DNS 查询工具 |
+| traceroute | 网络路由追踪工具 |
+| net-tools | ifconfig、netstat、route 等传统网络工具 |
 
 ### 二进制下载
 
@@ -93,6 +98,7 @@ python3 build/build.py build --name my-image --tag v1.0
 | btop | htop 的现代替代品，系统资源监控 |
 | tailspin | 带语法高亮的日志查看器 |
 | websocat | WebSocket 命令行调试工具 |
+| filebrowser | Web 文件管理器，支持上传/下载/分享 |
 
 ### 扩展安装
 

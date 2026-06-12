@@ -52,8 +52,8 @@ name = "postgresql-client"
 desc = "PostgreSQL 客户端工具"
 
 [[package]]
-name = "nmap"
-desc = "网络扫描和安全审计工具"
+name = "ncat"
+desc = "NMAP netcat 实现，支持 SSL/代理等高级功能"
 
 [[package]]
 name = "netcat-openbsd"
@@ -78,6 +78,26 @@ desc = "命令行 JSON 处理工具"
 [[package]]
 name = "lnav"
 desc = "终端日志查看和分析工具"
+
+[[package]]
+name = "iputils-ping"
+desc = "ping 网络诊断工具"
+
+[[package]]
+name = "iproute2"
+desc = "ip、ss 等网络配置工具"
+
+[[package]]
+name = "dnsutils"
+desc = "dig、nslookup 等 DNS 查询工具"
+
+[[package]]
+name = "traceroute"
+desc = "网络路由追踪工具"
+
+[[package]]
+name = "net-tools"
+desc = "ifconfig、netstat、route 等传统网络工具"
 
 # 通过 GitHub Releases 下载的二进制
 [[binary]]
@@ -258,6 +278,13 @@ name = "websocat"
 desc = "WebSocket 命令行调试工具"
 repo = "vi/websocat"
 pattern = "websocat.x86_64-unknown-linux-musl"
+
+[[binary]]
+name = "filebrowser"
+desc = "Web 文件管理器，支持上传/下载/分享"
+repo = "filebrowser/filebrowser"
+pattern = "linux-amd64-filebrowser.tar.gz"
+extract = "filebrowser"
 
 # code-server 扩展
 [[extension]]
