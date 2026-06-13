@@ -199,8 +199,10 @@ def cmd_generate(args: argparse.Namespace) -> None:
 
 
 def cmd_build(args: argparse.Namespace) -> None:
+    if not DOCKERFILE_OUT.exists():
+        print(f"错误: {DOCKERFILE_OUT} 不存在，请先运行 generate", file=sys.stderr)
+        sys.exit(1)
     tools = load_tools(TOOLS_TOML)
-    cmd_generate(args)
     image_name = args.name
     base_tag = tools["base"]["tag"]
     date_part = subprocess.run(
@@ -231,7 +233,7 @@ def main() -> None:
     p_gen = sub.add_parser("generate", help="生成 Dockerfile 和 README")
     p_gen.set_defaults(func=cmd_generate)
 
-    p_build = sub.add_parser("build", help="生成并构建 Docker 镜像")
+    p_build = sub.add_parser("build", help="构建 Docker 镜像")
     p_build.add_argument("--name", default="tecpoirot/code-server-plus", help="镜像名称")
     p_build.add_argument("--tag", default=None, help="镜像标签（默认: {base_tag}-{YYYYMMDD}）")
     p_build.set_defaults(func=cmd_build)
