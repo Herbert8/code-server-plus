@@ -11,6 +11,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends {{PACKAGE_LIST}
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
     && ln -sf /usr/bin/batcat /usr/local/bin/bat
 
+# 安装 OpenResty
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget gnupg ca-certificates \
+    && wget -qO - https://openresty.org/package/pubkey.gpg \
+       | gpg --dearmor -o /usr/share/keyrings/openresty.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/openresty.gpg] https://openresty.org/package/ubuntu noble main" \
+       > /etc/apt/sources.list.d/openresty.list \
+    && apt-get update && apt-get install -y --no-install-recommends openresty \
+    && rm -rf /var/lib/apt/lists/*
+COPY nginx.conf /etc/openresty/conf.d/code-server.conf
+RUN rm -f /etc/openresty/conf.d/default.conf \
+    && sed -i '/http {/a\    include /etc/openresty/conf.d/*.conf;' \
+       /usr/local/openresty/nginx/conf/nginx.conf \
+    && chown -R coder:coder /usr/local/openresty/nginx
+
 # 从其他镜像复制二进制
 {{STAGE_COPY_BLOCKS}}
 # 下载第三方二进制
@@ -38,4 +53,12 @@ RUN rm -rf ~/.config/code-server \
 
 USER root
 
-EXPOSE 8080
+# OpenResty 启动脚本（通过 ENTRYPOINTD 机制自动执行）
+RUN mkdir -p /entrypoint.d \
+    && cat > /entrypoint.d/10-openresty.sh << 'SCRIPT'
+#!/bin/sh
+openresty
+SCRIPT
+RUN chmod +x /entrypoint.d/10-openresty.sh
+
+EXPOSE 9080

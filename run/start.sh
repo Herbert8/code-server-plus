@@ -46,7 +46,7 @@ done
 
 docker run -d \
     --name "$CONTAINER_NAME" \
-    -p "${PORT:-34567}:8080" \
+    -p "${PORT:-34567}:9080" \
     -e TZ="${TZ:-Asia/Shanghai}" \
     -e PASSWORD="$PASSWORD" \
     -u "$(id -u):$(id -g)" \
@@ -59,7 +59,7 @@ echo ""
 echo "----------------------------------------------------------"
 echo "code-server-plus started"
 echo "  Container : ${CONTAINER_NAME}"
-echo "  URL       : http://localhost:${PORT:-34567}"
+echo "  URL       : http://localhost:${PORT:-34567}/<YYYYMMDDHHMM>"
 echo "  Password  : ${PASSWORD}"
 echo "  Workspace : ${OPT_WORKSPACE:-/home/coder/projects}"
 echo "  Mounts    :"
