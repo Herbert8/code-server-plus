@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>code-server-plus 设计文档</title>
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --primary: #2563eb;
+    --accent: #7c3aed;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --warning: #d97706;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    --code-bg: #1e293b;
+    --code-text: #e2e8f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header .subtitle {
+    margin-top: 8px;
+    color: var(--text-light);
+    font-size: 1rem;
+  }
+  header .badges {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  header .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-purple { background: #ede9fe; color: #6d28d9; }
+  section {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  section > h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  section > p {
+    margin-bottom: 16px;
+  }
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  ul, ol {
+    margin-bottom: 16px;
+    padding-left: 24px;
+  }
+  li { margin-bottom: 6px; }
+  strong { font-weight: 600; }
+  code {
+    font-family: "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace;
+    background: #f1f5f9;
+    color: var(--danger);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 20px;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    line-height: 1.6;
+    font-size: 0.875rem;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: var(--text);
+  }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.85rem; }
+  .canvas-wrap {
+    margin: 24px 0;
+    text-align: center;
+  }
+  canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  .note {
+    border-left: 4px solid var(--primary);
+    background: #eff6ff;
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 16px;
+  }
+  .note strong { color: var(--primary); }
+  .checkbox-list { list-style: none; padding-left: 0; }
+  .checkbox-list li {
+    padding-left: 28px;
+    position: relative;
+  }
+  .checkbox-list li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    font-size: 1.2rem;
+    color: var(--text-light);
+  }
+  .toc {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .toc h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .toc ol {
+    list-style: none;
+    padding-left: 0;
+  }
+  .toc li {
+    padding: 4px 0;
+  }
+  .toc a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .toc a:hover { color: var(--accent); }
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    color: var(--text-light);
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>code-server-plus 设计文档</h1>
+  <p class="subtitle">基于 code-server 的增强开发环境镜像 · OpenResty 网关 · TOTP 动态校验</p>
+  <div class="badges">
+    <span class="badge badge-blue">OpenResty</span>
+    <span class="badge badge-green">TOTP / RFC 6238</span>
+    <span class="badge badge-purple">Docker</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#s1">1. 架构概览</a></li>
+    <li><a href="#s2">2. OpenResty 选型与集成</a></li>
+    <li><a href="#s3">3. WebSocket 代理</a></li>
+    <li><a href="#s4">4. TOTP 动态校验</a></li>
+    <li><a href="#s5">5. build.py 职责分离</a></li>
+    <li><a href="#s6">6. 待办 / 后续</a></li>
+  </ol>
+</nav>
+
+<!-- ===== 1. 架构概览 ===== -->
+<section id="s1">
+  <h2><span class="section-num">1</span> 架构概览</h2>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas-arch" width="860" height="280"></canvas>
+  </div>
+
+  <ul>
+    <li><strong>OpenResty</strong> 监听 9080 端口，作为前置网关</li>
+    <li><strong>code-server</strong> 监听 8080 端口，不对外暴露</li>
+    <li>容器对外只暴露 9080 端口（<code>EXPOSE 9080</code>）</li>
+  </ul>
+
+  <h3>ENTRYPOINTD 启动机制</h3>
+  <p>利用 code-server 基础镜像的 <code>/entrypoint.d/*.sh</code> 机制，在容器启动时自动运行 OpenResty：</p>
+  <pre><code># /entrypoint.d/10-openresty.sh
+#!/bin/sh
+openresty</code></pre>
+  <p>OpenResty 在 code-server 之前启动，作为后台守护进程运行。</p>
+</section>
+
+<!-- ===== 2. OpenResty 选型与集成 ===== -->
+<section id="s2">
+  <h2><span class="section-num">2</span> OpenResty 选型与集成</h2>
+
+  <h3>为什么选 OpenResty 而非 nginx</h3>
+  <p>普通 nginx 不支持 Lua，无法在请求阶段做动态校验。OpenResty 内置 LuaJIT，可以直接在 <code>access_by_lua_block</code> 中执行 TOTP 计算、Cookie 管理等逻辑。</p>
+
+  <h3>基础镜像选择</h3>
+  <table>
+    <thead><tr><th>镜像</th><th>OpenResty 支持</th><th>选择</th></tr></thead>
+    <tbody>
+      <tr><td>Debian 13 (Trixie)</td><td>❌ 无 Trixie 仓库</td><td></td></tr>
+      <tr><td>Ubuntu 24.04 (Noble)</td><td>✅ 官方仓库</td><td>✅</td></tr>
+    </tbody>
+  </table>
+  <p>基础镜像从 Debian 切换到 Ubuntu，唯一原因就是 OpenResty 官方提供了 Noble 的 apt 仓库。</p>
+
+  <h3>conf.d 注入方式</h3>
+  <p>OpenResty 默认的 <code>nginx.conf</code> <strong>不包含</strong> <code>include /etc/openresty/conf.d/*.conf</code>，需要通过 <code>sed</code> 在 Docker 构建时注入：</p>
+  <pre><code>RUN sed -i '/http {/a\    include /etc/openresty/conf.d/*.conf;' \
+    /usr/local/openresty/nginx/conf/nginx.conf</code></pre>
+</section>
+
+<!-- ===== 3. WebSocket 代理 ===== -->
+<section id="s3">
+  <h2><span class="section-num">3</span> WebSocket 代理</h2>
+
+  <h3>$host vs $http_host</h3>
+  <p>这是调试中最坑的问题之一。code-server 有一个 <code>authenticateOrigin</code> 安全检查：它会解析浏览器发来的 <code>Origin</code> 头中的 host（含端口），然后与转发过来的 <code>Host</code> 头做精确字符串比较。</p>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas-host" width="860" height="320"></canvas>
+  </div>
+
+  <ul>
+    <li><code>$host</code>：nginx 内部变量，按优先级取 Host 头的域名部分（不含端口）</li>
+    <li><code>$http_host</code>：原始 Host 头的完整值（含端口）</li>
+  </ul>
+  <div class="note"><strong>结论：</strong>必须用 <code>$http_host</code>。</div>
+
+  <h3>proxy_read_timeout</h3>
+  <p>WebSocket 连接是长连接，nginx 默认 <code>proxy_read_timeout</code> 是 60 秒。如果没有数据传输，连接会被断开。设置为 <code>3600s</code> 确保长时间空闲的 WebSocket 连接不会被杀掉。</p>
+</section>
+
+<!-- ===== 4. TOTP 动态校验 ===== -->
+<section id="s4">
+  <h2><span class="section-num">4</span> TOTP 动态校验</h2>
+
+  <h3>为什么 TOTP 而非时间 token</h3>
+  <p>之前实现过一个基于 <code>os.date("%Y%m%d%H%M")</code> 的时间 token 方案，存在时区问题：</p>
+  <table>
+    <thead><tr><th>方案</th><th>时区依赖</th><th>安全性</th><th>体验</th></tr></thead>
+    <tbody>
+      <tr><td>时间 token (<code>/YYYYMMDDHHMM</code>)</td><td>❌ 依赖容器 TZ</td><td>低（可预测）</td><td>需记住当前时间</td></tr>
+      <tr><td>TOTP (RFC 6238)</td><td>✅ 使用 Unix 时间戳，与时区无关</td><td>高（需密钥）</td><td>Authenticator APP 生成</td></tr>
+    </tbody>
+  </table>
+
+  <h3>TOTP 原理（RFC 6238）</h3>
+  <div class="canvas-wrap">
+    <canvas id="canvas-totp-flow" width="860" height="180"></canvas>
+  </div>
+  <p>验证时允许 ±1 时间窗口（前后各 30 秒），共 90 秒容差。</p>
+
+  <h3>库选型对比</h3>
+  <table>
+    <thead><tr><th>方案</th><th>优点</th><th>缺点</th><th>选择</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>DIY 实现</td><td>无依赖</td><td>Base32 解码有 bug，需自己维护</td><td>❌</td>
+      </tr>
+      <tr>
+        <td>lua-resty-otp (leslie-tsang)</td>
+        <td><code>calc_token(var_time)</code> 接受时间参数，支持 ±1 窗口；有测试；Apache-2.0</td>
+        <td>9 stars，小众</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>otp (alues)</td>
+        <td>API 类似，15 stars</td>
+        <td><code>calc_token()</code> <strong>不接受时间参数</strong>，无法实现 ±1 窗口；有全局变量泄漏；无 LICENSE</td>
+        <td>❌</td>
+      </tr>
+    </tbody>
+  </table>
+  <p><strong>关键差异</strong>：alues/otp 的 <code>calc_token()</code> 内部直接用 <code>ngx.time()</code>，不接受参数。这意味着无法传入 <code>now±30</code> 来做容差检查，除非修改库源码。</p>
+  <p>lua-resty-otp 的 <code>calc_token(var_time)</code> 接受时间戳参数，正好满足 ±1 窗口需求。该库零外部依赖，仅使用 OpenResty 内置的 <code>ngx.hmac_sha1</code> 和 <code>bit</code> 运算，单文件 205 行，直接 vendor 到 <code>build/resty/otp.lua</code>。</p>
+
+  <h3>Base32 密钥规则</h3>
+  <p>TOTP 密钥是 <strong>Base32 编码</strong>（RFC 4648）。</p>
+  <p><strong>硬性规则：</strong></p>
+  <ul>
+    <li>字符集：<code>A-Z</code> 和 <code>2-7</code>（Base32 字母表，无小写、无 <code>0/1/8/9</code>）</li>
+    <li>库会自动处理大小写转换和 <code>=</code> padding 去除</li>
+    <li>只要字符在合法范围内，随便写即可</li>
+  </ul>
+  <p><strong>不需要管的：</strong></p>
+  <ul>
+    <li>解码后是什么内容（就是一串随机字节，本来也应该是随机的）</li>
+    <li>是否是 8 的倍数长度（非整数倍只是末尾几位 bit 被忽略）</li>
+    <li>是否有 <code>=</code> padding</li>
+  </ul>
+  <p><strong>长度建议：</strong></p>
+  <table>
+    <thead><tr><th>长度</th><th>位数</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>16 字符</td><td>80 bits</td><td>最低可用（Google Authenticator 要求）</td></tr>
+      <tr><td>26 字符</td><td>130 bits</td><td>RFC 4226 最低要求</td></tr>
+      <tr><td>32 字符</td><td>160 bits</td><td>RFC 4226 推荐，生产环境建议</td></tr>
+    </tbody>
+  </table>
+  <p>当前测试密钥 <code>JBSWY3DPEHPK3PXP</code>（16 字符）可以工作，生产环境建议使用 32 字符。</p>
+  <p><strong>生成方式：</strong></p>
+  <pre><code># 推荐：用工具生成随机密钥
+openssl rand -base32 20
+
+# 手敲也行，只要字符在 A-Z 和 2-7 范围内
+# 例如：ABCDE234567QRSTUVWXYZ234567</code></pre>
+
+  <h3>±1 窗口容差</h3>
+  <p>用户输入 TOTP 码时可能刚好在窗口切换的边界（例如 29 秒时生成，提交时已进入下一窗口）。±1 窗口检查允许验证通过前一个、当前、后一个窗口的码，共 90 秒容差。</p>
+  <div class="canvas-wrap">
+    <canvas id="canvas-window" width="860" height="160"></canvas>
+  </div>
+  <pre><code>local now = ngx.time()
+for _, off in ipairs({0, -1, 1}) do
+    if code == totp:calc_token(now + off * 30) then
+        -- 验证通过
+    end
+end</code></pre>
+
+  <h3>Cookie 机制</h3>
+  <p>TOTP 验证通过后，设置 Cookie 实现后续请求免验证：</p>
+  <pre><code>auth_token=1; Path=/; HttpOnly; Max-Age=10800</code></pre>
+  <table>
+    <thead><tr><th>属性</th><th>值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>Name</td><td><code>auth_token</code></td><td>Cookie 名称</td></tr>
+      <tr><td>Value</td><td><code>1</code></td><td>占位值（code-server 有自己的密码认证）</td></tr>
+      <tr><td>HttpOnly</td><td>是</td><td>防止 XSS 读取</td></tr>
+      <tr><td>Max-Age</td><td>10800 (3 小时)</td><td>过期后需重新输入 TOTP</td></tr>
+      <tr><td>Path</td><td>/</td><td>全局有效</td></tr>
+    </tbody>
+  </table>
+
+  <h3>访问流程</h3>
+  <div class="canvas-wrap">
+    <canvas id="canvas-flow" width="860" height="420"></canvas>
+  </div>
+</section>
+
+<!-- ===== 5. build.py 职责分离 ===== -->
+<section id="s5">
+  <h2><span class="section-num">5</span> build.py 职责分离</h2>
+  <p><code>generate</code> 和 <code>build</code> 两个子命令分离：</p>
+  <table>
+    <thead><tr><th>命令</th><th>职责</th><th>何时使用</th></tr></thead>
+    <tbody>
+      <tr><td><code>generate</code></td><td>从 <code>tools.toml</code> + <code>Dockerfile.tpl</code> 生成 <code>Dockerfile</code> 和 <code>README.md</code></td><td><code>tools.toml</code> 或 <code>Dockerfile.tpl</code> 有变更时</td></tr>
+      <tr><td><code>build</code></td><td>只执行 <code>docker build</code></td><td><code>Dockerfile</code> 已存在，构建镜像</td></tr>
+    </tbody>
+  </table>
+  <p><code>build</code> 不会自动调用 <code>generate</code>，Dockerfile 不存在时报错提示先运行 <code>generate</code>。</p>
+  <p>这样分离的好处：</p>
+  <ul>
+    <li>调试 <code>nginx.conf</code> 等配置文件时反复 <code>build</code> 不会重新查 GitHub API</li>
+    <li>避免 <code>generate</code> 覆盖对 Dockerfile 的临时修改</li>
+  </ul>
+</section>
+
+<!-- ===== 6. 待办 ===== -->
+<section id="s6">
+  <h2><span class="section-num">6</span> 待办 / 后续</h2>
+  <ul class="checkbox-list">
+    <li>TOTP 密钥改为环境变量传参（当前写死 <code>JBSWY3DPEHPK3PXP</code>）</li>
+    <li><code>start.sh</code> 启动时显示 QR 码（集成 <code>qrencode</code>）</li>
+    <li>推送镜像到 Docker Hub</li>
+  </ul>
+</section>
+
+<footer>
+  <p>code-server-plus 设计文档 · 基于 code-server + OpenResty + TOTP</p>
+</footer>
+
+</div>
+
+<script>
+(function() {
+  // ===== 辅助函数 =====
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function arrow(ctx, x1, y1, x2, y2, color, width) {
+    width = width || 2;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 9 * Math.cos(angle - 0.4), y2 - 9 * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - 9 * Math.cos(angle + 0.4), y2 - 9 * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fill();
+  }
+  function setup(id) {
+    var c = document.getElementById(id);
+    var dpr = window.devicePixelRatio || 1;
+    var w = c.width, h = c.height;
+    c.style.width = w + 'px';
+    c.style.height = h + 'px';
+    c.width = w * dpr;
+    c.height = h * dpr;
+    var ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+    return ctx;
+  }
+  var COLORS = {
+    primary: '#2563eb',
+    accent: '#7c3aed',
+    success: '#16a34a',
+    danger: '#dc2626',
+    warning: '#d97706',
+    text: '#1e293b',
+    textLight: '#64748b',
+    border: '#cbd5e1',
+    bg: '#f8fafc',
+    bgBlue: '#eff6ff',
+    bgRed: '#fef2f2',
+    bgGreen: '#f0fdf4'
+  };
+
+  // ===== Canvas 1: 架构概览 =====
+  function drawArch() {
+    var ctx = setup('canvas-arch');
+    var W = 860;
+    // Browser
+    roundRect(ctx, 40, 80, 140, 80, 10);
+    ctx.fillStyle = COLORS.bgBlue;
+    ctx.fill();
+    ctx.strokeStyle = COLORS.primary; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = COLORS.text; ctx.font = '600 16px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('浏览器', 110, 118);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '12px sans-serif';
+    ctx.fillText('User', 110, 138);
+
+    // Arrow 1
+    arrow(ctx, 185, 120, 295, 120, COLORS.primary, 2);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px sans-serif';
+    ctx.fillText(':9080', 240, 112);
+
+    // OpenResty
+    roundRect(ctx, 300, 60, 200, 120, 10);
+    ctx.fillStyle = '#ede9fe'; ctx.fill();
+    ctx.strokeStyle = COLORS.accent; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = COLORS.text; ctx.font = '600 16px sans-serif';
+    ctx.fillText('OpenResty', 400, 90);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '12px sans-serif';
+    ctx.fillText('access_by_lua', 400, 112);
+    ctx.fillText('TOTP 校验 / Cookie 检查', 400, 130);
+    ctx.fillText('proxy_pass + WebSocket', 400, 148);
+
+    // Arrow 2
+    arrow(ctx, 505, 120, 615, 120, COLORS.primary, 2);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px sans-serif';
+    ctx.fillText(':8080', 560, 112);
+
+    // code-server
+    roundRect(ctx, 620, 80, 180, 80, 10);
+    ctx.fillStyle = COLORS.bgGreen; ctx.fill();
+    ctx.strokeStyle = COLORS.success; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = COLORS.text; ctx.font = '600 16px sans-serif';
+    ctx.fillText('code-server', 710, 118);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '12px sans-serif';
+    ctx.fillText('VS Code in Browser', 710, 138);
+
+    // 底部标注
+    ctx.fillStyle = COLORS.textLight; ctx.font = '12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('对外暴露', 45, 260);
+    arrow(ctx, 105, 255, 285, 255, COLORS.border, 1);
+    ctx.fillText('内部代理', 590, 260);
+    arrow(ctx, 530, 255, 615, 255, COLORS.border, 1);
+  }
+
+  // ===== Canvas 2: $host vs $http_host =====
+  function drawHost() {
+    var ctx = setup('canvas-host');
+    // Row 1: $host (fail)
+    roundRect(ctx, 30, 30, 220, 100, 8);
+    ctx.fillStyle = COLORS.bgBlue; ctx.fill();
+    ctx.strokeStyle = COLORS.primary; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COLORS.text; ctx.font = '600 13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('浏览器 Origin', 140, 58);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px monospace';
+    ctx.fillText('localhost:34567', 140, 78);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '10px sans-serif';
+    ctx.fillText('（含端口）', 140, 94);
+
+    arrow(ctx, 255, 80, 325, 80, COLORS.danger, 2);
+
+    roundRect(ctx, 330, 30, 220, 100, 8);
+    ctx.fillStyle = COLORS.bgRed; ctx.fill();
+    ctx.strokeStyle = COLORS.danger; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COLORS.danger; ctx.font = '600 13px sans-serif';
+    ctx.fillText('$host 转发', 440, 58);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px monospace';
+    ctx.fillText('localhost', 440, 78);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '10px sans-serif';
+    ctx.fillText('（丢失端口）', 440, 94);
+
+    arrow(ctx, 555, 80, 625, 80, COLORS.danger, 2);
+
+    roundRect(ctx, 630, 35, 200, 90, 8);
+    ctx.fillStyle = COLORS.bgRed; ctx.fill();
+    ctx.strokeStyle = COLORS.danger; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COLORS.danger; ctx.font = '600 20px sans-serif';
+    ctx.fillText('✗ 1006', 730, 72);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px sans-serif';
+    ctx.fillText('WebSocket 被拒绝', 730, 92);
+
+    // Row 2: $http_host (success)
+    roundRect(ctx, 30, 175, 220, 100, 8);
+    ctx.fillStyle = COLORS.bgBlue; ctx.fill();
+    ctx.strokeStyle = COLORS.primary; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COLORS.text; ctx.font = '600 13px sans-serif';
+    ctx.fillText('浏览器 Origin', 140, 203);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px monospace';
+    ctx.fillText('localhost:34567', 140, 223);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '10px sans-serif';
+    ctx.fillText('（含端口）', 140, 239);
+
+    arrow(ctx, 255, 225, 325, 225, COLORS.success, 2);
+
+    roundRect(ctx, 330, 175, 220, 100, 8);
+    ctx.fillStyle = COLORS.bgGreen; ctx.fill();
+    ctx.strokeStyle = COLORS.success; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COLORS.success; ctx.font = '600 13px sans-serif';
+    ctx.fillText('$http_host 转发', 440, 203);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px monospace';
+    ctx.fillText('localhost:34567', 440, 223);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '10px sans-serif';
+    ctx.fillText('（保留端口）', 440, 239);
+
+    arrow(ctx, 555, 225, 625, 225, COLORS.success, 2);
+
+    roundRect(ctx, 630, 180, 200, 90, 8);
+    ctx.fillStyle = COLORS.bgGreen; ctx.fill();
+    ctx.strokeStyle = COLORS.success; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COLORS.success; ctx.font = '600 20px sans-serif';
+    ctx.fillText('✓ 通过', 730, 217);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px sans-serif';
+    ctx.fillText('WebSocket 连接成功', 730, 237);
+  }
+
+  // ===== Canvas 3: TOTP 原理流水线 =====
+  function drawTotpFlow() {
+    var ctx = setup('canvas-totp-flow');
+    var steps = [
+      { label: 'Unix 时间戳', sub: 'floor(ts / 30)', color: COLORS.primary },
+      { label: 'HMAC-SHA1', sub: '(secret, T)', color: COLORS.accent },
+      { label: '动态截取', sub: 'offset → 4 bytes', color: COLORS.warning },
+      { label: '取模', sub: '% 1000000', color: COLORS.success },
+      { label: '6 位码', sub: '06d', color: COLORS.danger }
+    ];
+    var boxW = 130, boxH = 70, gap = 40;
+    var startX = (860 - (boxW * 5 + gap * 4)) / 2;
+    var y = 55;
+
+    steps.forEach(function(s, i) {
+      var x = startX + i * (boxW + gap);
+      roundRect(ctx, x, y, boxW, boxH, 8);
+      ctx.fillStyle = s.color + '15'; ctx.fill();
+      ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = s.color; ctx.font = '600 13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(s.label, x + boxW/2, y + 28);
+      ctx.fillStyle = COLORS.textLight; ctx.font = '11px monospace';
+      ctx.fillText(s.sub, x + boxW/2, y + 50);
+
+      if (i < steps.length - 1) {
+        var ax1 = x + boxW, ax2 = x + boxW + gap;
+        arrow(ctx, ax1, y + boxH/2, ax2, y + boxH/2, COLORS.textLight, 1.5);
+      }
+    });
+
+    ctx.fillStyle = COLORS.textLight; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('TOTP 码每 30 秒变化一次', 430, 150);
+  }
+
+  // ===== Canvas 4: ±1 窗口时间线 =====
+  function drawWindow() {
+    var ctx = setup('canvas-window');
+    var segW = 180, startX = (860 - segW * 3) / 2;
+    var y = 30, h = 50;
+
+    // [-1] window
+    roundRect(ctx, startX, y, segW, h, 6);
+    ctx.fillStyle = COLORS.bgGreen; ctx.fill();
+    ctx.strokeStyle = COLORS.success; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COLORS.success; ctx.font = '600 14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('T-1（前窗口）', startX + segW/2, y + 22);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px sans-serif';
+    ctx.fillText('now - 30s', startX + segW/2, y + 40);
+
+    // [0] window (current)
+    roundRect(ctx, startX + segW, y, segW, h, 6);
+    ctx.fillStyle = COLORS.bgBlue; ctx.fill();
+    ctx.strokeStyle = COLORS.primary; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = COLORS.primary; ctx.font = '600 14px sans-serif';
+    ctx.fillText('T（当前窗口）', startX + segW + segW/2, y + 22);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px sans-serif';
+    ctx.fillText('now', startX + segW + segW/2, y + 40);
+
+    // [+1] window
+    roundRect(ctx, startX + segW * 2, y, segW, h, 6);
+    ctx.fillStyle = COLORS.bgGreen; ctx.fill();
+    ctx.strokeStyle = COLORS.success; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = COLORS.success; ctx.font = '600 14px sans-serif';
+    ctx.fillText('T+1（后窗口）', startX + segW * 2 + segW/2, y + 22);
+    ctx.fillStyle = COLORS.textLight; ctx.font = '11px sans-serif';
+    ctx.fillText('now + 30s', startX + segW * 2 + segW/2, y + 40);
+
+    // Bracket
+    var bx1 = startX, bx2 = startX + segW * 3;
+    var by = y + h + 12;
+    ctx.strokeStyle = COLORS.accent; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bx1, by); ctx.lineTo(bx1, by + 8);
+    ctx.lineTo(bx2, by + 8); ctx.lineTo(bx2, by);
+    ctx.stroke();
+    ctx.fillStyle = COLORS.accent; ctx.font = '600 13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('±1 窗口容差 = 90 秒', (bx1 + bx2) / 2, by + 32);
+  }
+
+  // ===== Canvas 5: 访问流程 =====
+  function drawFlow() {
+    var ctx = setup('canvas-flow');
+    var steps = [
+      { num: 1, title: '获取 TOTP 码', desc: '打开 Authenticator APP\n获取 6 位码（如 956603）', color: COLORS.primary, icon: '📱' },
+      { num: 2, title: '访问 URL', desc: '浏览器打开\nlocalhost:34567/956603', color: COLORS.accent, icon: '🌐' },
+      { num: 3, title: 'OpenResty 校验', desc: '匹配 6 位码 → 计算 TOTP\n检查 ±1 窗口 → 匹配\nSet-Cookie → 302 重定向', color: COLORS.warning, icon: '🔐' },
+      { num: 4, title: 'Cookie 放行', desc: '重定向到 /\nCookie auth_token=1\n→ proxy_pass → code-server', color: COLORS.success, icon: '✅' },
+      { num: 5, title: '后续访问', desc: '所有请求带 Cookie\n直接通过 OpenResty\n3 小时后需重新验证', color: COLORS.textLight, icon: '🔄' }
+    ];
+    var boxW = 680, boxH = 60, gap = 12;
+    var startX = (860 - boxW) / 2;
+
+    steps.forEach(function(s, i) {
+      var y = 15 + i * (boxH + gap);
+      roundRect(ctx, startX, y, boxW, boxH, 8);
+      ctx.fillStyle = s.color + '08'; ctx.fill();
+      ctx.strokeStyle = s.color + '60'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // Number circle
+      ctx.beginPath();
+      ctx.arc(startX + 30, y + boxH/2, 18, 0, Math.PI * 2);
+      ctx.fillStyle = s.color; ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '600 16px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(s.num, startX + 30, y + boxH/2 + 6);
+
+      // Title
+      ctx.fillStyle = s.color; ctx.font = '600 14px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(s.title, startX + 65, y + 24);
+
+      // Desc
+      var lines = s.desc.split('\n');
+      ctx.fillStyle = COLORS.textLight; ctx.font = '12px sans-serif';
+      lines.forEach(function(line, li) {
+        ctx.fillText(line, startX + 65, y + 42 + li * 16);
+      });
+
+      // Down arrow
+      if (i < steps.length - 1) {
+        ctx.fillStyle = COLORS.border;
+        ctx.beginPath();
+        ctx.moveTo(startX + boxW/2, y + boxH + 1);
+        ctx.lineTo(startX + boxW/2 - 6, y + boxH + 9);
+        ctx.lineTo(startX + boxW/2 + 6, y + boxH + 9);
+        ctx.closePath();
+        ctx.fill();
+      }
+    });
+  }
+
+  // ===== 启动 =====
+  window.addEventListener('DOMContentLoaded', function() {
+    drawArch();
+    drawHost();
+    drawTotpFlow();
+    drawWindow();
+    drawFlow();
+  });
+})();
+</script>
+</body>
+</html>
