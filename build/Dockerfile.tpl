@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get update && apt-get install -y --no-install-recommends openresty \
     && rm -rf /var/lib/apt/lists/*
 COPY nginx.conf /etc/openresty/conf.d/code-server.conf
+COPY resty/otp.lua /usr/local/openresty/lualib/resty/otp.lua
 RUN rm -f /etc/openresty/conf.d/default.conf \
     && sed -i '/http {/a\    include /etc/openresty/conf.d/*.conf;' \
        /usr/local/openresty/nginx/conf/nginx.conf \
