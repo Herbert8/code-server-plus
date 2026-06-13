@@ -206,7 +206,45 @@ auth_token=1; Path=/; HttpOnly; Max-Age=10800
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 5. build.py 职责分离
+## 6. 安全隐蔽
+
+### Server 头伪装
+
+OpenResty 默认返回 `Server: openresty/1.25.3.1`，暴露了软件名称和版本号。通过 `headers-more-nginx-module`（OpenResty 自带）伪装为 `nginx`：
+
+```nginx
+server_tokens off;
+more_set_headers 'Server: nginx';
+```
+
+为什么选择 `nginx` 而非其他：
+
+| 伪装值 | 问题 |
+|--------|------|
+| nginx | 无，OpenResty 本来就是 nginx 内核，HTTP 行为特征完全一致 |
+| Apache | HTTP 行为特征不符（头顺序、304、chunked 等细节不同），指纹工具可识别 |
+| IIS | 同上，且 IIS 几乎不会跑在 9080 端口 |
+| Unknown / 空 | 反而引起好奇和深入扫描 |
+
+大小写也必须匹配真实 nginx 的输出：`nginx`（全小写），否则指纹识别工具一看就是假的。
+
+### 自定义 404 响应体
+
+默认 nginx 404 页面包含 `<center>openresty</center>`，暴露服务器信息。通过 `error_page` 拦截：
+
+```nginx
+error_page 404 = @err404;
+
+location @err404 {
+    internal;
+    default_type text/plain;
+    return 404 "Not Found";
+}
+```
+
+404 响应体变为纯文本 `Not Found`，无任何 HTML 和服务器信息。
+
+## 7. build.py 职责分离
 
 `generate` 和 `build` 两个子命令分离：
 
@@ -221,7 +259,7 @@ auth_token=1; Path=/; HttpOnly; Max-Age=10800
 - 调试 `nginx.conf` 等配置文件时反复 `build` 不会重新查 GitHub API
 - 避免 `generate` 覆盖对 Dockerfile 的临时修改
 
-## 6. 待办 / 后续
+## 8. 待办 / 后续
 
 - [ ] TOTP 密钥改为环境变量传参（当前写死 `JBSWY3DPEHPK3PXP`）
 - [ ] `start.sh` 启动时显示 QR 码（集成 `qrencode`）
