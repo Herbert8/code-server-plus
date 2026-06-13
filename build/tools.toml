@@ -1,6 +1,7 @@
 [base]
 image = "codercom/code-server"
-tag = "4.122.0-debian"
+# tag = "4.122.0-debian"
+tag = "4.123.0-ubuntu"
 
 # 包管理器安装的工具（apt）
 [[package]]
