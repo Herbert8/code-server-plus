@@ -1,6 +1,37 @@
 # code-server-plus
 
-基于 [codercom/code-server](https://hub.docker.com/r/codercom/code-server) 的增强开发环境镜像，集成了常用开发工具、网络调试、数据库客户端等。
+基于 [codercom/code-server](https://hub.docker.com/r/codercom/code-server) 的增强开发环境镜像，集成 OpenResty 网关认证和常用开发工具。
+
+## 功能特性
+
+- **TOTP 动态码认证**：通过 Authenticator APP 生成 6 位验证码访问，无需暴露原始密码
+- **JWT 会话管理**：验证通过后签发 HS256 JWT Cookie（3 小时有效期），签名+过期双重校验
+- **OpenResty 反向代理**：前置网关处理认证，WebSocket 代理支持在线编辑器
+- **安全隐蔽**：伪装 Server 头为 nginx，自定义 404 页面，避免指纹识别
+- **开发工具齐全**：集成 50+ 命令行工具，涵盖搜索、文件管理、网络调试、数据库客户端等
+
+## 配置
+
+启动前需在 `run/envs/default.env` 中填写三个必填项：
+
+```bash
+IMAGE=tecpoirot/code-server-plus:latest
+PORT=34567
+TZ=Asia/Shanghai
+PASSWORD=                    # code-server 登录密码
+TOTP_SECRET=                 # TOTP 密钥（Base32，A-Z 和 2-7）
+JWT_SECRET=                  # JWT 签名密钥（任意随机字符串）
+```
+
+生成密钥：
+
+```bash
+# TOTP_SECRET（Base32，添加到 Authenticator APP）
+openssl rand -base32 20
+
+# JWT_SECRET
+openssl rand -hex 32
+```
 
 ## 使用方法
 
@@ -12,15 +43,12 @@ python3 build/build.py generate
 
 # 构建镜像
 python3 build/build.py build
-
-# 构建时指定镜像名和标签
-python3 build/build.py build --name my-image --tag v1.0
 ```
 
 ### 启动容器
 
 ```bash
-# 启动（交互选择环境配置）
+# 启动（交互选择环境配置，需先配置 default.env）
 ./run/start.sh
 
 # 停止
@@ -35,6 +63,13 @@ python3 build/build.py build --name my-image --tag v1.0
 # 查看状态
 ./run/status.sh
 ```
+
+## 访问方式
+
+1. 在 Authenticator APP 中添加 `TOTP_SECRET` 对应的密钥
+2. 浏览器访问 `http://localhost:<PORT>/<6位TOTP码>`
+3. 验证通过后自动跳转到 code-server 登录页，输入 `PASSWORD` 即可进入编辑器
+4. 3 小时内无需重新输入 TOTP 码
 
 ## 工具清单
 
