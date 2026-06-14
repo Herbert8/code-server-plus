@@ -339,5 +339,5 @@ location @err404 {
 
 - [x] TOTP 密钥改为环境变量传参（`TOTP_SECRET`）
 - [x] Cookie 改为 JWT 签名（`JWT_SECRET`，lua-resty-jwt）
+- [x] 推送镜像到 Docker Hub（`tecpoirot/code-server-plus:v1.0.0`）
 - [ ] `start.sh` 启动时显示 QR 码（集成 `qrencode`）
-- [ ] 推送镜像到 Docker Hub
