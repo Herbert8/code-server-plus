@@ -242,7 +242,17 @@ location @err404 {
 }
 ```
 
-404 响应体变为纯文本 `Not Found`，无任何 HTML 和服务器信息。
+404 响应体模拟 nginx 默认错误页，与 Server 头完全一致，无自定义痕迹：
+
+```html
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+```
 
 ## 7. build.py 职责分离
 
