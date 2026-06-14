@@ -18,12 +18,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
        | gpg --dearmor -o /usr/share/keyrings/openresty.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/openresty.gpg] https://openresty.org/package/ubuntu noble main" \
        > /etc/apt/sources.list.d/openresty.list \
-    && apt-get update && apt-get install -y --no-install-recommends openresty \
+    && apt-get update && apt-get install -y --no-install-recommends openresty openresty-opm \
     && rm -rf /var/lib/apt/lists/*
+# 安装 lua-resty-jwt（JWT 签发与验证）
+RUN opm get SkyLothar/lua-resty-jwt
 COPY nginx.conf /etc/openresty/conf.d/code-server.conf
 COPY resty/otp.lua /usr/local/openresty/lualib/resty/otp.lua
 RUN rm -f /etc/openresty/conf.d/default.conf \
-    && sed -i '/http {/a\    include /etc/openresty/conf.d/*.conf;' \
+    && sed -i -e '/^events {/i\env TOTP_SECRET;\nenv JWT_SECRET;\n' \
+              -e '/http {/a\    include /etc/openresty/conf.d/*.conf;' \
        /usr/local/openresty/nginx/conf/nginx.conf \
     && chown -R coder:coder /usr/local/openresty/nginx
 

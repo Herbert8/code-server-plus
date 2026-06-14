@@ -5,7 +5,7 @@
 ```
 浏览器 ──→ OpenResty (9080) ──→ code-server (8080)
               │
-              ├─ access_by_lua: TOTP 校验 / Cookie 检查
+              ├─ access_by_lua: TOTP 校验 / JWT Cookie 签发与验证
               └─ proxy_pass: 反向代理 + WebSocket 升级
 ```
 
@@ -42,12 +42,15 @@ OpenResty 在 code-server 之前启动，作为后台守护进程运行。
 
 ### conf.d 注入方式
 
-OpenResty 默认的 `nginx.conf` **不包含** `include /etc/openresty/conf.d/*.conf`，需要通过 `sed` 在 Docker 构建时注入：
+OpenResty 默认的 `nginx.conf` **不包含** `include /etc/openresty/conf.d/*.conf`，需要通过 `sed` 在 Docker 构建时注入。同时需要通过 `env` 指令声明环境变量，否则 Nginx worker 进程无法通过 `os.getenv()` 访问：
 
 ```dockerfile
-RUN sed -i '/http {/a\    include /etc/openresty/conf.d/*.conf;' \
-    /usr/local/openresty/nginx/conf/nginx.conf
+RUN sed -i -e '/^events {/i\env TOTP_SECRET;\nenv JWT_SECRET;\n' \
+           -e '/http {/a\    include /etc/openresty/conf.d/*.conf;' \
+           /usr/local/openresty/nginx/conf/nginx.conf
 ```
+
+> **注意**：`env` 指令必须在 `main` 上下文（`events` 块之前），否则 `os.getenv()` 在 Lua 中返回 `nil`。
 
 ## 3. WebSocket 代理
 
@@ -139,7 +142,7 @@ TOTP 密钥是 **Base32 编码**（RFC 4648）。
 | 26 字符 | 130 bits | RFC 4226 最低要求 |
 | 32 字符 | 160 bits | RFC 4226 推荐，生产环境建议 |
 
-当前测试密钥 `JBSWY3DPEHPK3PXP`（16 字符）可以工作，生产环境建议使用 32 字符。
+当前测试密钥 `JBSWY3DPEHPK3PXP`（16 字符）可以工作，生产环境建议使用 32 字符。密钥通过环境变量 `TOTP_SECRET` 传入。
 
 **生成方式：**
 
@@ -164,21 +167,84 @@ for _, off in ipairs({0, -1, 1}) do
 end
 ```
 
-### Cookie 机制
+### Cookie 机制（JWT）
 
-TOTP 验证通过后，设置 Cookie 实现后续请求免验证：
+TOTP 验证通过后，签发 JWT 并通过 Cookie 下发。Cookie 的值不再是固定标记（如 `1`），而是带签名的 JWT token，验证时同时校验签名和过期时间，防止伪造或篡改。
+
+| 组件 | 说明 |
+|------|------|
+| 算法 | HS256 (HMAC-SHA256) |
+| 库 | lua-resty-jwt (SkyLothar)，通过 `opm get SkyLothar/lua-resty-jwt` 安装（自动安装依赖 lua-resty-hmac） |
+| Claims | `iss`="code-server-plus", `iat`=签发时间戳, `exp`=签发时间+10800 |
 
 ```
-auth_token=1; Path=/; HttpOnly; Max-Age=10800
+auth_token=eyJ0eXAi...<JWT>; Path=/; HttpOnly; Max-Age=10800
 ```
 
 | 属性 | 值 | 说明 |
 |------|-----|------|
 | Name | `auth_token` | Cookie 名称 |
-| Value | `1` | 占位值（code-server 有自己的密码认证） |
+| Value | JWT token | HS256 签名，含 iss/iat/exp |
 | HttpOnly | 是 | 防止 XSS 读取 |
 | Max-Age | 10800 (3 小时) | 过期后需重新输入 TOTP |
 | Path | / | 全局有效 |
+
+验证时 `jwt:verify(jwt_secret, token)` 同时校验签名和 `exp` 过期时间，篡改或过期的 Cookie 会被拒绝。
+
+JWT 结构示例（解码后）：
+
+```
+Header:  {"typ":"JWT","alg":"HS256"}
+Payload: {"iss":"code-server-plus","iat":1781400021,"exp":1781410821}
+```
+
+### JWT 库选型与安装
+
+| 方案 | 优点 | 缺点 | 选择 |
+|------|------|------|------|
+| 手写 HS256 | 无依赖 | 需自己维护 HMAC+Base64url | ❌ |
+| lua-resty-jwt (SkyLothar) | opm 可装，自动处理依赖 | 最后更新 2017，但功能稳定 | ✅ |
+
+通过 `opm get SkyLothar/lua-resty-jwt` 安装。opm 根据 `dist.ini` 的 `requires` 声明自动拉取全部依赖：
+
+```
+SkyLothar/lua-resty-jwt 0.1.11
+  ├─ jkeys089/lua-resty-hmac 0.06     ← opm 自动安装
+  └─ openresty/lua-resty-string 0.11   ← opm 自动安装
+```
+
+> **注意**：apt 的 `openresty` 包**不含** `opm` 命令，需额外安装 `openresty-opm` 包。
+
+vendor vs opm 安装方式对比：
+
+| 库 | 安装方式 | 原因 |
+|----|---------|------|
+| lua-resty-otp | vendor（COPY 单文件） | 零依赖，205 行 |
+| lua-resty-jwt | opm get | 依赖 hmac + string，opm 自动处理依赖链 |
+
+已知坑：
+- `jwt:sign()` 必须显式传 `header = { typ = "JWT", alg = "HS256" }`，不传会 nil 索引报错（库直接索引 `jwt_obj.header.typ`）
+- `jwt:verify()` 默认通过 `opt_is_not_expired()` 检查 `exp`（存在则校验），无需显式传 claim_spec
+
+### 环境变量
+
+三个必填变量在 `default.env` 中配置，`start.sh` 通过 `-e` 传入容器，`common.sh` 的 `check_required` 强制非空检查：
+
+| 变量 | 说明 | 格式 | 示例 |
+|------|------|------|------|
+| `PASSWORD` | code-server 登录密码 | 任意字符串 | `my-password` |
+| `TOTP_SECRET` | TOTP 密钥 | Base32（A-Z 和 2-7） | `JBSWY3DPEHPK3PXP` |
+| `JWT_SECRET` | JWT 签名密钥 | 任意随机字符串 | `a1b2c3d4e5f6...` |
+
+生成方式：
+
+```bash
+# TOTP_SECRET（Base32 密钥）
+openssl rand -base32 20
+
+# JWT_SECRET（随机十六进制）
+openssl rand -hex 32
+```
 
 ### 访问流程
 
@@ -189,20 +255,20 @@ auth_token=1; Path=/; HttpOnly; Max-Age=10800
 │ 2. 浏览器访问 http://localhost:34567/956603                     │
 │    OpenResty access_by_lua:                                      │
 │      ├─ 匹配 URL /(\d{6})                                        │
-│      ├─ 计算 TOTP，检查 ±1 窗口                                  │
-│      ├─ 匹配 → Set-Cookie: auth_token=1                          │
+│      ├─ 从 TOTP_SECRET 计算 TOTP，检查 ±1 窗口                  │
+│      ├─ 匹配 → jwt:sign(JWT_SECRET) → Set-Cookie: auth_token=   │
 │      └─ 302 重定向到 /                                           │
 │                                                                 │
 │ 3. 浏览器跟随重定向，带上 Cookie 访问 /                          │
 │    OpenResty access_by_lua:                                      │
 │      ├─ 无 6 位码匹配                                            │
-│      ├─ 检查 cookie_auth_token → 存在                            │
+│      ├─ jwt:verify(JWT_SECRET, cookie) → 签名+过期校验通过      │
 │      └─ 放行，proxy_pass → code-server (8080)                   │
 │                                                                 │
 │ 4. code-server 返回登录页，用户输入密码进入编辑器                │
 │                                                                 │
 │ 5. 后续请求都带 Cookie，直接通过 OpenResty 到达 code-server     │
-│    Cookie 3 小时后过期，需重新输入 TOTP 码                       │
+│    JWT 3 小时后过期，需重新输入 TOTP 码                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -237,8 +303,8 @@ error_page 404 = @err404;
 
 location @err404 {
     internal;
-    default_type text/plain;
-    return 404 "Not Found";
+    default_type text/html;
+    return 404 "<html>\r\n<head><title>404 Not Found</title></head>\r\n<body>\r\n<center><h1>404 Not Found</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n";
 }
 ```
 
@@ -271,6 +337,7 @@ location @err404 {
 
 ## 8. 待办 / 后续
 
-- [ ] TOTP 密钥改为环境变量传参（当前写死 `JBSWY3DPEHPK3PXP`）
+- [x] TOTP 密钥改为环境变量传参（`TOTP_SECRET`）
+- [x] Cookie 改为 JWT 签名（`JWT_SECRET`，lua-resty-jwt）
 - [ ] `start.sh` 启动时显示 QR 码（集成 `qrencode`）
 - [ ] 推送镜像到 Docker Hub

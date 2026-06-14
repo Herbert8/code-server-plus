@@ -49,6 +49,8 @@ docker run -d \
     -p "${PORT:-34567}:9080" \
     -e TZ="${TZ:-Asia/Shanghai}" \
     -e PASSWORD="$PASSWORD" \
+    -e TOTP_SECRET="$TOTP_SECRET" \
+    -e JWT_SECRET="$JWT_SECRET" \
     -u "$(id -u):$(id -g)" \
     --restart unless-stopped \
     $volume_args \

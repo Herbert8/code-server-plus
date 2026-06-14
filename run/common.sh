@@ -43,6 +43,14 @@ check_required() {
         echo "Error: PASSWORD not set, please configure in env file" >&2
         exit 1
     fi
+    if [ -z "${TOTP_SECRET:-}" ]; then
+        echo "Error: TOTP_SECRET not set, please configure in env file" >&2
+        exit 1
+    fi
+    if [ -z "${JWT_SECRET:-}" ]; then
+        echo "Error: JWT_SECRET not set, please configure in env file" >&2
+        exit 1
+    fi
     if [ -z "${IMAGE:-}" ]; then
         echo "Error: IMAGE not set, please configure in env file" >&2
         exit 1
