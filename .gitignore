@@ -1,4 +1,5 @@
 build/Dockerfile
+docs/design.html
 data/
 run/envs/*
 !run/envs/default.env
